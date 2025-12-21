@@ -92,9 +92,21 @@
         const container = document.getElementById('mainContent');
         const updateEl = document.getElementById('updateTime');
         
-        // CORRECCIÓN: Se eliminó date.setHours(...) para que use la hora local del sistema automáticamente
+        // Convertimos el timestamp a objeto Date
         const date = new Date(data.timestamp * 1000);
-        updateEl.innerHTML = `Actualización: <strong>${date.toLocaleString('es-BO')}</strong>`;
+        
+        // CORRECCIÓN: Formato de 24 horas (hour12: false)
+        const timeString = date.toLocaleString('es-BO', { 
+            hour12: false,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        
+        updateEl.innerHTML = `Actualización: <strong>${timeString}</strong>`;
 
         let html = "";
 
