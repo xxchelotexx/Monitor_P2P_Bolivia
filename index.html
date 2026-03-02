@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monitor P2P Bolivia</title>
+    <title>Monitor P2P Bolivia - Railway API</title>
     <style>
+        /* Estilos Base Unificados */
         body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 15px; color: #333; background-color: #f4f7f6; padding-bottom: 50px; }
         .container { max-width: 1200px; margin: 0 auto; }
         h1 { font-size: 1.5rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
@@ -19,51 +20,31 @@
         .controls label { background: #fff; border: 1px solid #ddd; padding: 2px 8px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 
         .table-scroll-container { width: 100%; overflow-x: auto; background: #fff; border-radius: 8px; border: 1px solid #ddd; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; table-layout: auto; }
-        th, td { 
-            padding: 10px 12px; 
-            border-bottom: 1px solid #eee; 
-            font-size: 0.85rem; 
-            white-space: nowrap; 
-            width: 1%; 
-        }
-        th { background: #f8f9fa; color: #666; font-weight: 600; text-align: right; }
-        td { text-align: right; }
-
-        .col-dist-header, .col-dist-data { 
-            width: auto !important; 
-            text-align: left; 
-            min-width: 150px; 
-        }
+        table { width: 100%; border-collapse: collapse; }
         
-        .col-precio { text-align: left; font-weight: bold; }
+        /* Tamaño de letra unificado para todas las tablas */
+        th, td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 0.85rem; white-space: nowrap; text-align: right; }
+        th { background: #f8f9fa; color: #666; font-weight: 600; }
+        
+        .col-precio { text-align: left; font-weight: bold; width: 1%; }
+        .col-dist-header, .col-dist-data { width: auto !important; text-align: left; min-width: 150px; }
         .dist-bar { font-size: 8px; letter-spacing: -1px; display: block; line-height: 1; }
         
+        /* Panel Inferior */
+        #bybitExtraPanel { display: none; margin-top: 30px; border-top: 3px solid #2ebd85; padding-top: 10px; }
+        #bybitOrdersPanel { display: none; margin-top: 30px; border-top: 3px solid #ff9800; padding-top: 10px; }
+        .label-ejecucion { font-size: 1rem; font-weight: bold; display: block; margin: 15px 0 8px 0; }
+
+        /* Ajuste específico para la nueva tabla de órdenes */
+        #ordersContent table th, #ordersContent table td { font-size: 1rem; }
+        .col-usuario { text-align: center !important; }
+
         .loading { text-align: center; padding: 50px; color: #666; }
         .error { color: red; padding: 20px; background: #ffe6e6; border-radius: 8px; font-size: 0.9rem; }
-        .scroll-hint { font-size: 0.7rem; color: #999; text-align: right; margin-bottom: 4px; display: none; }
-
-        footer { 
-            margin-top: 40px; 
-            padding: 20px; 
-            text-align: center; 
-            border-top: 1px solid #ddd; 
-            font-size: 1rem;
-            background: #fff;
-            border-radius: 10px;
-        }
-        .whatsapp-link { 
-            color: #25D366; 
-            text-decoration: none; 
-            font-weight: bold; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 5px;
-        }
-        .whatsapp-link:hover { text-decoration: underline; }
+        footer { margin-top: 40px; padding: 20px; text-align: center; border-top: 1px solid #ddd; font-size: 1rem; background: #fff; border-radius: 10px; }
+        .whatsapp-link { color: #25D366; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
 
         @media (max-width: 600px) {
-            .scroll-hint { display: block; }
             .stats span { width: 100%; border-bottom: 1px solid #eee; padding-bottom: 4px; }
         }
     </style>
@@ -85,7 +66,27 @@
     </header>
 
     <div id="mainContent">
-        <div class="loading">Cargando monitor...</div>
+        <div class="loading">Cargando datos desde Railway...</div>
+    </div>
+
+    <div id="bybitExtraPanel">
+        <div class="section-header">
+            <span>📊 Órdenes Ejecutadas</span>
+            <select id="limitResumen" style="font-size: 0.9rem;" onchange="refreshExtraPanel()">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="15">15</option>
+                <option value="999">Todo</option>
+            </select>
+        </div>
+        <div id="compactContent"></div>
+    </div>
+
+    <div id="bybitOrdersPanel">
+        <div class="section-header">
+            <span>🛒 Órdenes Activas</span>
+        </div>
+        <div id="ordersContent"></div>
     </div>
 
     <footer>
@@ -95,43 +96,113 @@
 
 <script>
     const API_BASE_URL = "https://apicollector-production.up.railway.app/p2p";
+    const API_ORDERS_URL = "https://apicollector-production.up.railway.app/bybit/ordenes";
     let currentLimits = { buy: 5, sell: 5 };
+    let cachedData = null;
+    
     const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const fmtVol = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+    const fmtVolDec = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 
     async function loadData() {
         const exchange = document.getElementById('exchangeSelector').value;
+        const extraPanel = document.getElementById('bybitExtraPanel');
+        const ordersPanel = document.getElementById('bybitOrdersPanel');
+        
         try {
             const response = await fetch(`${API_BASE_URL}/${exchange}`);
-            if (!response.ok) throw new Error("Error en respuesta de API");
+            if (!response.ok) throw new Error("Error Railway");
             const data = await response.json();
+            cachedData = data;
+            
             renderDashboard(data);
+            
+            if (exchange === 'bybit') {
+                extraPanel.style.display = 'block';
+                renderExtraPanel(data);
+                await loadOrdersData();
+            } else {
+                extraPanel.style.display = 'none';
+                ordersPanel.style.display = 'none';
+            }
+            
         } catch (err) {
-            document.getElementById('mainContent').innerHTML = `<div class="error">❌ Error de conexión: ${err.message}.</div>`;
+            document.getElementById('mainContent').innerHTML = `<div class="error">❌ Error: ${err.message}</div>`;
         }
+    }
+
+    async function loadOrdersData() {
+        const ordersPanel = document.getElementById('bybitOrdersPanel');
+        try {
+            const response = await fetch(API_ORDERS_URL);
+            if (!response.ok) throw new Error("Error API Órdenes");
+            const data = await response.json();
+            
+            renderOrdersTable(data.ordenes);
+            ordersPanel.style.display = 'block';
+        } catch (err) {
+            console.error("Error cargando órdenes:", err);
+            ordersPanel.style.display = 'none';
+        }
+    }
+
+    function renderOrdersTable(ordenes) {
+        const container = document.getElementById('ordersContent');
+        let html = "";
+
+        const tipos = [
+            { key: 'Compra', titulo: '🟢 COMPRAS RECIENTES', color: '#2ebd85' },
+            { key: 'Venta', titulo: '🔴 VENTAS RECIENTES', color: '#f6465d' }
+        ];
+
+        tipos.forEach(tipo => {
+            const lista = ordenes[tipo.key] || [];
+            if (lista.length === 0) return;
+
+            html += `
+                <span class="label-ejecucion" style="color:${tipo.color}">${tipo.titulo}</span>
+                <div class="table-scroll-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="col-precio">Precio</th>
+                                <th class="col-usuario">Usuario</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${lista.map(o => {
+                                // Lógica para ofuscar: Primera letra + 5 asteriscos
+                                const usuarioOfuscado = o.usuario && o.usuario.length > 0 
+                                    ? o.usuario.charAt(0) + "*****" 
+                                    : "*****";
+
+                                return `
+                                    <tr>
+                                        <td class="col-precio" style="color:${tipo.color}">${fmt.format(o.precio)}</td>
+                                        <td class="col-usuario" style="white-space: normal;">${usuarioOfuscado}</td>
+                                        <td style="font-weight:bold">${fmtVolDec.format(o.monto)}</td>
+                                    </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        });
+
+        container.innerHTML = html || "<p style='padding:20px; text-align:center; color:#999;'>Sin órdenes recientes.</p>";
+    }
+
+    function refreshExtraPanel() {
+        if (cachedData) renderExtraPanel(cachedData);
     }
 
     function renderDashboard(data) {
         const container = document.getElementById('mainContent');
         const updateEl = document.getElementById('updateTime');
-        
         const date = new Date(data.timestamp * 1000);
-        
-        // Formato 24 Horas
-        const timeString = date.toLocaleString('es-BO', { 
-            hour12: false,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-        
-        updateEl.innerHTML = `Actualización: <strong>${timeString}</strong>`;
+        updateEl.innerHTML = `Actualización: <strong>${date.toLocaleTimeString('es-BO', {hour12:false})}</strong>`;
 
         let html = "";
-
         data.resultados.forEach(res => {
             const type = res.trade_type;
             const prefix = type.toLowerCase();
@@ -145,9 +216,9 @@
 
             const displayEntries = entries.slice(0, limit === 999 ? entries.length : limit);
             
+            // Cálculos de totales para la tarjeta de resumen
             const volTotal = displayEntries.reduce((acc, curr) => acc + curr.suma, 0);
-            const volInm = displayEntries.reduce((acc, curr) => acc + (curr.inmediato || 0), 0);
-            const adsCount = displayEntries.reduce((acc, curr) => acc + curr.conteo, 0);
+            const volInmediatoTotal = displayEntries.reduce((acc, curr) => acc + (curr.inmediato || 0), 0);
 
             html += `
                 <div class="section-header">
@@ -156,31 +227,29 @@
                         <option value="5" ${limit == 5 ? 'selected' : ''}>5</option>
                         <option value="10" ${limit == 10 ? 'selected' : ''}>10</option>
                         <option value="15" ${limit == 15 ? 'selected' : ''}>15</option>
+                        <option value="20" ${limit == 20 ? 'selected' : ''}>20</option>
                         <option value="999" ${limit == 999 ? 'selected' : ''}>Todas</option>
                     </select>
                 </div>
-
                 <div class="summary-card">
                     <div class="stats">
                         <span>Volumen: <strong>${fmtVol.format(volTotal)} USDT</strong></span>
-                        <span>Vol. Inmediato: <strong>${fmtVol.format(volInm)} USDT</strong></span>
-                        <span>Ads: <strong>${adsCount}</strong></span>
+                        <span>Vol. Inmediato: <strong>${fmtVol.format(volInmediatoTotal)} USDT</strong></span>
+                        <span>Ads: <strong>${displayEntries.reduce((a,c)=>a+c.conteo,0)}</strong></span>
                     </div>
                     <div class="controls">
-                        <label><input type="checkbox" checked onchange="toggleCol('${prefix}-inm', this.checked)"> ⚡ Inmediato</label>
+                        <label><input type="checkbox" checked onchange="toggleCol('${prefix}-inm', this.checked)"> ⚡ Inm.</label>
                         <label><input type="checkbox" checked onchange="toggleCol('${prefix}-min', this.checked)"> 📉 Min</label>
                         <label><input type="checkbox" checked onchange="toggleCol('${prefix}-max', this.checked)"> 📈 Max</label>
                     </div>
                 </div>
-
-                <p class="scroll-hint">← Desliza para ver Distribución ⬛ →</p>
                 <div class="table-scroll-container">
                     <table>
                         <thead>
                             <tr>
-                                <th class="col-precio" style="text-align: left">Precio</th>
-                                <th>👤 Ads</th>
-                                <th>💰 Volumen</th>
+                                <th class="col-precio">Precio</th>
+                                <th>Ads</th>
+                                <th>Volumen</th>
                                 <th class="${prefix}-inm">⚡ Inmediato</th>
                                 <th class="${prefix}-min">📉 Min</th>
                                 <th class="${prefix}-max">📈 Max</th>
@@ -203,17 +272,60 @@
                             }).join('')}
                         </tbody>
                     </table>
-                </div>
-                <hr style="border:0; border-top:1px solid #eee; margin:25px 0;">`;
+                </div>`;
         });
-
         container.innerHTML = html;
         applySavedColumnVisibility();
     }
 
+    function renderExtraPanel(data) {
+        const container = document.getElementById('compactContent');
+        const limitResumen = parseInt(document.getElementById('limitResumen').value);
+        let html = "";
+
+        data.resultados.forEach(res => {
+            const type = res.trade_type;
+            const color = type === "BUY" ? "#2ebd85" : "#f6465d";
+            
+            let entries = Object.entries(res.datos_agrupados)
+                .map(([p, info]) => ({ precio: parseFloat(p), ...info }))
+                .filter(e => (e.volumen_ejecutado > 0 || e.volumen_en_proceso > 0));
+
+            if (entries.length === 0) return;
+
+            entries.sort((a, b) => type === "BUY" ? a.precio - b.precio : b.precio - a.precio);
+            const display = entries.slice(0, limitResumen);
+
+            html += `
+                <span class="label-ejecucion" style="color:${color}">${type === "BUY" ? "🟢 EJECUCIÓN COMPRA" : "🔴 EJECUCIÓN VENTA"}</span>
+                <div class="table-scroll-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="col-precio">Precio</th>
+                                <th>Ads</th>
+                                <th>Ejecutado</th>
+                                <th>En Proceso</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${display.map(e => `
+                                <tr>
+                                    <td class="col-precio" style="color:${color}">${fmt.format(e.precio)}</td>
+                                    <td>${e.conteo}</td>
+                                    <td style="font-weight:bold">${fmtVolDec.format(e.volumen_ejecutado || 0)}</td>
+                                    <td style="color:#666">${fmtVolDec.format(e.volumen_en_proceso || 0)}</td>
+                                </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        });
+        container.innerHTML = html || "<p style='padding:20px; text-align:center; color:#999;'>Sin datos de ejecución detallados.</p>";
+    }
+
     function updateLimit(type, val) {
         currentLimits[type] = parseInt(val);
-        loadData();
+        if (cachedData) renderDashboard(cachedData);
     }
 
     function toggleCol(cls, show) {
