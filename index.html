@@ -26,7 +26,7 @@
         th, td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 0.85rem; white-space: nowrap; text-align: right; }
         th { background: #f8f9fa; color: #666; font-weight: 600; }
         
-        .col-precio { text-align: left; font-weight: bold; width: 1%; }
+        .col-precio { text-align: left; font-weight: bold; width: 1%; min-width: 85px; }
         .col-dist-header, .col-dist-data { width: auto !important; text-align: left; min-width: 150px; }
         .dist-bar { font-size: 8px; letter-spacing: -1px; display: block; line-height: 1; }
         
@@ -100,9 +100,19 @@
     let currentLimits = { buy: 5, sell: 5 };
     let cachedData = null;
     
-    const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // Formateadores de volumen
     const fmtVol = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
     const fmtVolDec = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
+
+    // NUEVA FUNCIÓN: Formatea el precio con 3 decimales si es Bybit, de lo contrario 2.
+    function formatPrecio(valor) {
+        const exchange = document.getElementById('exchangeSelector').value;
+        const decimales = exchange === 'bybit' ? 3 : 2;
+        return new Intl.NumberFormat('en-US', { 
+            minimumFractionDigits: decimales, 
+            maximumFractionDigits: decimales 
+        }).format(valor);
+    }
 
     async function loadData() {
         const exchange = document.getElementById('exchangeSelector').value;
@@ -172,14 +182,13 @@
                         </thead>
                         <tbody>
                             ${lista.map(o => {
-                                // Lógica para ofuscar: Primera letra + 5 asteriscos
                                 const usuarioOfuscado = o.usuario && o.usuario.length > 0 
                                     ? o.usuario.charAt(0) + "*****" 
                                     : "*****";
 
                                 return `
                                     <tr>
-                                        <td class="col-precio" style="color:${tipo.color}">${fmt.format(o.precio)}</td>
+                                        <td class="col-precio" style="color:${tipo.color}">${formatPrecio(o.precio)}</td>
                                         <td class="col-usuario" style="white-space: normal;">${usuarioOfuscado}</td>
                                         <td style="font-weight:bold">${fmtVolDec.format(o.monto)}</td>
                                     </tr>`;
@@ -216,7 +225,6 @@
 
             const displayEntries = entries.slice(0, limit === 999 ? entries.length : limit);
             
-            // Cálculos de totales para la tarjeta de resumen
             const volTotal = displayEntries.reduce((acc, curr) => acc + curr.suma, 0);
             const volInmediatoTotal = displayEntries.reduce((acc, curr) => acc + (curr.inmediato || 0), 0);
 
@@ -261,7 +269,7 @@
                                 const modulo = volTotal > 0 ? Math.floor((e.suma / volTotal) * 40) : 0;
                                 return `
                                 <tr>
-                                    <td class="col-precio" style="color: ${color}">${fmt.format(e.precio)}</td>
+                                    <td class="col-precio" style="color: ${color}">${formatPrecio(e.precio)}</td>
                                     <td>${e.conteo}</td>
                                     <td>${fmtVol.format(e.suma)}</td>
                                     <td class="${prefix}-inm">${fmtVol.format(e.inmediato || 0)}</td>
@@ -311,7 +319,7 @@
                         <tbody>
                             ${display.map(e => `
                                 <tr>
-                                    <td class="col-precio" style="color:${color}">${fmt.format(e.precio)}</td>
+                                    <td class="col-precio" style="color:${color}">${formatPrecio(e.precio)}</td>
                                     <td>${e.conteo}</td>
                                     <td style="font-weight:bold">${fmtVolDec.format(e.volumen_ejecutado || 0)}</td>
                                     <td style="color:#666">${fmtVolDec.format(e.volumen_en_proceso || 0)}</td>
