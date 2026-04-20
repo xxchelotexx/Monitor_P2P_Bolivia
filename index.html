@@ -27,7 +27,7 @@
         /* Tasas FIAT a la derecha - Ajustado para claridad */
         .fiat-right { 
             font-family: 'Courier New', Courier, monospace; 
-            font-size: 0.82rem; 
+            font-size: 10 rem; 
             text-align: left; 
             white-space: pre; 
             line-height: 1.4;
@@ -166,7 +166,7 @@
             // Se añade BCB, BCP y BISA manteniendo la alineación solicitada
             fiatContainer.innerHTML = 
                 `<span class="fiat-label">BCB Referencial</span>  Venta: ${f.BCB.venta.toFixed(2)}  Compra: ${f.BCB.compra.toFixed(2)}\n` +
-                `<span class="fiat-label">BCP USDT</span>  Venta: ${f.BCP.venta.toFixed(2)}  Compra: --\n` +
+                `<span class="fiat-label">BCP USDT</span>  Venta: ${f.BCP.venta.toFixed(2)}  Compra: ${f.BCP.compra.toFixed(2)}\n` +
                 `<span class="fiat-label">BISA USDT</span>  Venta: ${f.BISA.venta.toFixed(2)}  Compra: ${f.BISA.compra.toFixed(2)}`;
         } catch (err) {
             fiatContainer.innerHTML = `<span class="error">Error Tasas FIAT</span>`;
