@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Monitor P2P Bolivia</title>
     <style>
-        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 15px; color: #333; background-color: #f4f7f6; padding-bottom: 50px; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 15px; color: #333; background-color: #f4f7f6; padding-bottom: 50px; transition: background-color 0.3s, color 0.3s; }
         .container { max-width: 1200px; margin: 0 auto; }
         
         /* Estructura del Header */
-        h1 { font-size: 1.5rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        h1 { font-size: 1.5rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         select { padding: 5px; font-size: 1.1rem; border-radius: 8px; border: 1px solid #ccc; background: white; cursor: pointer; }
         
         .header-flex { 
@@ -24,7 +24,7 @@
         .author { font-weight: bold; color: #333; }
         .update-time { color: #666; font-size: 0.9rem; }
 
-        /* Tasas FIAT a la derecha - Ajustado para claridad */
+        /* Tasas FIAT a la derecha */
         .fiat-right { 
             font-family: 'Courier New', Courier, monospace; 
             font-size: 10 rem; 
@@ -53,7 +53,9 @@
         
         .col-precio { text-align: left; font-weight: bold; width: 1%; min-width: 85px; }
         .col-dist-header, .col-dist-data { width: auto !important; text-align: left; min-width: 150px; }
-        .dist-bar { font-size: 8px; letter-spacing: -1px; display: block; line-height: 1; }
+        
+        /* BARRA DE DISTRIBUCIÓN */
+        .dist-bar { font-size: 8px; letter-spacing: -1px; display: block; line-height: 1; color: #000; } 
         
         #bybitExtraPanel { display: none; margin-top: 30px; border-top: 3px solid #2ebd85; padding-top: 10px; }
         .label-ejecucion { font-size: 1rem; font-weight: bold; display: block; margin: 15px 0 8px 0; }
@@ -62,15 +64,34 @@
         .error { color: red; padding: 10px; font-size: 0.8rem; }
         footer { margin-top: 40px; padding: 20px; text-align: center; border-top: 1px solid #ddd; font-size: 1rem; background: #fff; border-radius: 10px; }
 
+        /* MODO OSCURO */
+        body.dark-mode { background-color: #121212; color: #e0e0e0; }
+        .dark-mode .summary-card, .dark-mode .table-scroll-container, .dark-mode footer, .dark-mode select, .dark-mode .fiat-right { background-color: #1e1e1e; border-color: #333; color: #e0e0e0; }
+        .dark-mode th { background-color: #252525; color: #aaa; }
+        .dark-mode td { border-bottom-color: #333; }
+        .dark-mode .author, .dark-mode .fiat-label { color: #fff; }
+        .dark-mode .update-time { color: #999; }
+        .dark-mode .controls label { background-color: #252525; border-color: #444; color: #ccc; }
+        .dark-mode .fiat-right { color: #00ff41; }
+        
+        /* Colores de la barra en Dark Mode */
+        .dark-mode .dist-bar.buy-bar { color: #2ebd85 !important; }
+        .dark-mode .dist-bar.sell-bar { color: #f6465d !important; }
+
+        #darkModeBtn { position: absolute; top: 15px; right: 15px; padding: 5px 10px; font-size: 1rem; border-radius: 8px; border: 1px solid #ccc; cursor: pointer; background: #fff; z-index: 1000; }
+        .dark-mode #darkModeBtn { background: #333; color: #fff; border-color: #555; }
+
         @media (max-width: 768px) {
             .header-flex { flex-direction: column; gap: 10px; }
             .fiat-right { font-size: 0.75rem; white-space: pre; width: 100%; box-sizing: border-box; }
+            h1 { margin-top: 40px; } 
         }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <button id="darkModeBtn" onclick="toggleDarkMode()">🌙</button>
     <header>
         <h1>📈 
             <select id="exchangeSelector" onchange="loadData()">
@@ -126,6 +147,27 @@
     const fmtVol = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
     const fmtVolDec = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 
+    function toggleDarkMode() {
+        const isDark = document.body.classList.toggle('dark-mode');
+        document.getElementById('darkModeBtn').innerText = isDark ? '☀️' : '🌙';
+        localStorage.setItem('darkMode', isDark);
+        
+        // Renderizar de nuevo si hay datos cargados para aplicar los nuevos iconos
+        if (cachedData) {
+            renderDashboard(cachedData);
+            if (document.getElementById('exchangeSelector').value === 'bybit') {
+                renderExtraPanel(cachedData);
+            }
+        }
+    }
+
+    function initDarkMode() {
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkModeBtn').innerText = '☀️';
+        }
+    }
+
     function formatPrecio(valor) {
         const exchange = document.getElementById('exchangeSelector').value;
         const decimales = exchange === 'bybit' ? 3 : 2;
@@ -163,7 +205,6 @@
             const data = await response.json();
             const f = data.fuentes;
 
-            // Se añade BCB, BCP y BISA manteniendo la alineación solicitada
             fiatContainer.innerHTML = 
                 `<span class="fiat-label">BCB Referencial</span>  Venta: ${f.BCB.venta.toFixed(2)}  Compra: ${f.BCB.compra.toFixed(2)}\n` +
                 `<span class="fiat-label">BCP USDT</span>  Venta: ${f.BCP.venta.toFixed(2)}  Compra: ${f.BCP.compra.toFixed(2)}\n` +
@@ -204,18 +245,15 @@ function renderDashboard(data) {
             const type = res.trade_type;
             const prefix = type.toLowerCase();
             const color = type === "BUY" ? "#2ebd85" : "#f6465d";
+            const barClass = type === "BUY" ? "buy-bar" : "sell-bar";
             const limit = currentLimits[prefix];
             
-            // Agrupar y ordenar datos
             let entries = Object.entries(res.datos_agrupados).map(([p, v]) => ({ precio: parseFloat(p), ...v })).sort((a, b) => type === "BUY" ? a.precio - b.precio : b.precio - a.precio);
-            
-            // Aplicar el límite visual seleccionado (5, 10 o Todas)
             const display = entries.slice(0, limit === 999 ? entries.length : limit);
             
-            // Cálculos para la summary-card (solo de lo que se muestra)
             const volT = display.reduce((acc, curr) => acc + curr.suma, 0);
             const volInmT = display.reduce((acc, curr) => acc + (curr.inmediato || 0), 0);
-            const adsT = display.reduce((acc, curr) => acc + (curr.conteo || 0), 0); // Nueva suma de Ads
+            const adsT = display.reduce((acc, curr) => acc + (curr.conteo || 0), 0);
 
             html += `<div class="section-header"><span>${type === "BUY" ? "🟢 Ofertas de Compra" : "🔴 Ofertas de Venta"}</span>
                 <select style="font-size:0.8rem;" onchange="updateLimit('${prefix}', this.value)">
@@ -238,8 +276,7 @@ function renderDashboard(data) {
                 <th class="col-dist-header">Dist.</th></tr></thead><tbody>
                 ${display.map(e => `<tr><td class="col-precio" style="color:${color}">${formatPrecio(e.precio)}</td><td>${e.conteo}</td><td>${fmtVol.format(e.suma)}</td>
                 <td class="${prefix}-inm">${fmtVol.format(e.inmediato || 0)}</td><td class="${prefix}-min">${fmtVol.format(e.min || 0)}</td><td class="${prefix}-max">${fmtVol.format(e.max || 0)}</td>
-                <td class="col-dist-data"><span class="dist-bar" style="color:${color}">${'⬛'.repeat(volT > 0 ? Math.floor((e.suma / volT) * 30) : 0)}</span></td></tr>`).join('')}
-                </tbody></table></div>`;
+<td class="col-dist-data"><span class="dist-bar ${barClass}">${(document.body.classList.contains('dark-mode') ? (type === 'BUY' ? '🟩' : '🟥') : '⬛').repeat(volT > 0 ? Math.floor((e.suma / volT) * 30) : 0)}</span></td></tr>`).join('')}                </tbody></table></div>`;
         });
         document.getElementById('mainContent').innerHTML = html;
         applySavedColumnVisibility();
@@ -278,7 +315,10 @@ function renderDashboard(data) {
     }
 
     setInterval(loadData, 30000);
-    window.onload = loadData;
+    window.onload = () => {
+        initDarkMode();
+        loadData();
+    };
 </script>
 </body>
 </html>
