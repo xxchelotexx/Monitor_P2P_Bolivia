@@ -206,7 +206,7 @@
             const f = data.fuentes;
 
             fiatContainer.innerHTML = 
-                `<span class="fiat-label">BCB Referencial</span>  Venta: ${f.BCB.venta.toFixed(2)}  Compra: ${f.BCB.compra.toFixed(2)}\n` +
+                `<span class="fiat-label">BCB Oficial</span>  Tipo de cambio: ${f.BCB.venta.toFixed(2)} \n` +
                 `<span class="fiat-label">BCP USDT</span>  Venta: ${f.BCP.venta.toFixed(2)}  Compra: ${f.BCP.compra.toFixed(2)}\n` +
                 `<span class="fiat-label">BISA USDT</span>  Venta: ${f.BISA.venta.toFixed(2)}  Compra: ${f.BISA.compra.toFixed(2)}`;
         } catch (err) {
