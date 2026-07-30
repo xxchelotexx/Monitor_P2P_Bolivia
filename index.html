@@ -99,6 +99,7 @@
                 <option value="bybit">BYBIT</option>
                 <option value="bitget">BITGET</option>
                 <option value="mexc">MEXC</option>
+                <option value="bingx">BINGX</option>
             </select> 
             (USDT/BOB)
         </h1>
@@ -171,7 +172,7 @@
 
     function formatPrecio(valor) {
         const exchange = document.getElementById('exchangeSelector').value;
-        const decimales = exchange === 'bybit' ? 3 : 2;
+        const decimales = exchange === 'bybit'||exchange==='bingx' ? 3 : 2;
         return new Intl.NumberFormat('en-US', { minimumFractionDigits: decimales, maximumFractionDigits: decimales }).format(valor);
     }
 
