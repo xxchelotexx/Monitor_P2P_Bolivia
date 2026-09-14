@@ -15,9 +15,8 @@
         .header-flex { 
             display: flex; 
             justify-content: space-between; 
-            align-items: flex-start; 
+            align-items: center; 
             margin-bottom: 20px;
-            gap: 20px;
         }
 
         .info-left { font-size: 0.95rem; line-height: 1.6; }
@@ -26,19 +25,25 @@
 
         /* Tasas FIAT a la derecha */
         .fiat-right { 
-            font-family: 'Courier New', Courier, monospace; 
-            font-size: 10 rem; 
-            text-align: left; 
-            white-space: pre; 
-            line-height: 1.4;
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            font-size: 1.1rem; /* Texto más grande */
+            line-height: 1.6;
             color: #000;
             background: #fff;
-            padding: 8px;
+            padding: 12px 16px;
             border-radius: 8px;
             border: 1px solid #ddd;
+            margin-top: 35px; /* Espacio para no chocar con el botón de modo oscuro */
+            margin-bottom: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            white-space: normal;
         }
-        .fiat-label { font-weight: bold; display: inline-block; width: 130px; font-family: 'Segoe UI', sans-serif; }
-
+        .fiat-label { 
+            font-weight: bold; 
+            display: inline-block; 
+            width: 140px; 
+        }
         /* Estilos Tablas y Secciones */
         .section-header { display: flex; justify-content: space-between; align-items: center; margin: 25px 0 10px 0; font-size: 1.1rem; font-weight: bold; }
         .summary-card { background: #fff; padding: 12px; border-radius: 10px; border: 1px solid #e0e0e0; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -92,7 +97,7 @@
 
 <div class="container">
     <button id="darkModeBtn" onclick="toggleDarkMode()">🌙</button>
-    <header>
+    <!-- <header>
         <h1>📈 
             <select id="exchangeSelector" onchange="loadData()">
                 <option value="binance">BINANCE</option>
@@ -111,7 +116,30 @@
             </div>
             <div id="fiatRates" class="fiat-right">Cargando tasas bancarias...</div>
         </div>
+    </header> -->
+    <header>
+        <!-- Mover las tasas FIAT arriba de todo -->
+        <div id="fiatRates" class="fiat-right">Cargando tasas bancarias...</div>
+
+        <h1>📈 
+            <select id="exchangeSelector" onchange="loadData()">
+                <option value="binance">BINANCE</option>
+                <option value="bybit">BYBIT</option>
+                <option value="bitget">BITGET</option>
+                <option value="mexc">MEXC</option>
+                <option value="bingx">BINGX</option>
+            </select> 
+            (USDT/BOB)
+        </h1>
+        
+        <div class="header-flex">
+            <div class="info-left">
+                <div class="author">By: <strong>Chelotex</strong></div>
+                <div id="updateTime" class="update-time">Actualización: --:--:--</div>
+            </div>
+        </div>
     </header>
+
 
     <div id="mainContent">
         <div class="loading">Cargando datos...</div>
@@ -200,23 +228,43 @@
         }
     }
 
-    async function loadFiatData() {
-        const fiatContainer = document.getElementById('fiatRates');
-        try {
-            const response = await fetch(API_FIAT_URL);
-            const data = await response.json();
-            const f = data.fuentes;
+    // async function loadFiatData() {
+    //     const fiatContainer = document.getElementById('fiatRates');
+    //     try {
+    //         const response = await fetch(API_FIAT_URL);
+    //         const data = await response.json();
+    //         const f = data.fuentes;
 
-            fiatContainer.innerHTML = 
-                `<span class="fiat-label">BCB Oficial</span>  Venta: ${f.BCB.venta.toFixed(2)} Compra:${f.BCB.compra.toFixed(2)} \n` +
-                `<span class="fiat-label">BCP USD</span>  Venta: ${f.BCP_USD.venta.toFixed(2)}  Compra: ${f.BCP_USD.compra.toFixed(2)}\n` +
-                `<span class="fiat-label">BCP USDT</span>  Venta: ${f.BCP_USDT.venta.toFixed(2)}  Compra: ${f.BCP_USDT.compra.toFixed(2)}\n` +
-                `<span class="fiat-label">BEC USD</span>  Venta: ${f.BEC_USD.venta.toFixed(2)}  Compra: ${f.BEC_USD.compra.toFixed(2)}\n` +
-                `<span class="fiat-label">BISA USDT</span>  Venta: ${f.BISA.venta.toFixed(2)}  Compra: ${f.BISA.compra.toFixed(2)}`;
-        } catch (err) {
-            fiatContainer.innerHTML = `<span class="error">Error Tasas FIAT</span>`;
+    //         fiatContainer.innerHTML = 
+    //             `<span class="fiat-label">BCB Oficial</span>  Venta: ${f.BCB.venta.toFixed(2)} Compra:${f.BCB.compra.toFixed(2)} \n` +
+    //             `<span class="fiat-label">BCP USD</span>  Venta: ${f.BCP_USD.venta.toFixed(2)}  Compra: ${f.BCP_USD.compra.toFixed(2)}\n` +
+    //             `<span class="fiat-label">BCP USDT</span>  Venta: ${f.BCP_USDT.venta.toFixed(2)}  Compra: ${f.BCP_USDT.compra.toFixed(2)}\n` +
+    //             `<span class="fiat-label">BEC USD</span>  Venta: ${f.BEC_USD.venta.toFixed(2)}  Compra: ${f.BEC_USD.compra.toFixed(2)}\n` +
+    //             `<span class="fiat-label">BMSC USD</span>  Venta: ${f.BMSC_USD.venta.toFixed(2)}  Compra: ${f.BMSC_USD.compra.toFixed(2)}\n` +
+    //             `<span class="fiat-label">BISA USDT</span>  Venta: ${f.BISA.venta.toFixed(2)}  Compra: ${f.BISA.compra.toFixed(2)}`;
+    //     } catch (err) {
+    //         fiatContainer.innerHTML = `<span class="error">Error Tasas FIAT</span>`;
+    //     }
+    // }
+
+        async function loadFiatData() {
+            const fiatContainer = document.getElementById('fiatRates');
+            try {
+                const response = await fetch(API_FIAT_URL);
+                const data = await response.json();
+                const f = data.fuentes;
+
+                fiatContainer.innerHTML = 
+                    `<div><span class="fiat-label">BCB Oficial</span> Venta: <strong>${f.BCB.venta.toFixed(2)}</strong> | Compra: <strong>${f.BCB.compra.toFixed(2)}</strong></div>` +
+                    `<div><span class="fiat-label">BCP USD</span> Venta: <strong>${f.BCP_USD.venta.toFixed(2)}</strong> | Compra: <strong>${f.BCP_USD.compra.toFixed(2)}</strong></div>` +
+                    `<div><span class="fiat-label">BCP USDT</span> Venta: <strong>${f.BCP_USDT.venta.toFixed(2)}</strong> | Compra: <strong>${f.BCP_USDT.compra.toFixed(2)}</strong></div>` +
+                    `<div><span class="fiat-label">BEC USD</span> Venta: <strong>${f.BEC_USD.venta.toFixed(2)}</strong> | Compra: <strong>${f.BEC_USD.compra.toFixed(2)}</strong></div>` +
+                    `<div><span class="fiat-label">BMSC USD</span> Venta: <strong>${f.BMSC_USD.venta.toFixed(2)}</strong> | Compra: <strong>${f.BMSC_USD.compra.toFixed(2)}</strong></div>` +
+                    `<div><span class="fiat-label">BISA USDT</span> Venta: <strong>${f.BISA.venta.toFixed(2)}</strong> | Compra: <strong>${f.BISA.compra.toFixed(2)}</strong></div>`;
+            } catch (err) {
+                fiatContainer.innerHTML = `<span class="error">Error Tasas FIAT</span>`;
+            }
         }
-    }
 
     async function loadOrdersData() {
         try {
