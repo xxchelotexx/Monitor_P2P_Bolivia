@@ -209,7 +209,8 @@
 
             fiatContainer.innerHTML = 
                 `<span class="fiat-label">BCB Oficial</span>  Venta: ${f.BCB.venta.toFixed(2)} Compra:${f.BCB.compra.toFixed(2)} \n` +
-                `<span class="fiat-label">BCP USDT</span>  Venta: ${f.BCP.venta.toFixed(2)}  Compra: ${f.BCP.compra.toFixed(2)}\n` +
+                `<span class="fiat-label">BCP USDT</span>  Venta: ${f.BCP_USD.venta.toFixed(2)}  Compra: ${f.BCP_USD.compra.toFixed(2)}\n` +
+                `<span class="fiat-label">BCP USDT</span>  Venta: ${f.BCP_USDT.venta.toFixed(2)}  Compra: ${f.BCP_USDT.compra.toFixed(2)}\n` +
                 `<span class="fiat-label">BISA USDT</span>  Venta: ${f.BISA.venta.toFixed(2)}  Compra: ${f.BISA.compra.toFixed(2)}`;
         } catch (err) {
             fiatContainer.innerHTML = `<span class="error">Error Tasas FIAT</span>`;
