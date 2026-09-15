@@ -228,25 +228,6 @@
         }
     }
 
-    // async function loadFiatData() {
-    //     const fiatContainer = document.getElementById('fiatRates');
-    //     try {
-    //         const response = await fetch(API_FIAT_URL);
-    //         const data = await response.json();
-    //         const f = data.fuentes;
-
-    //         fiatContainer.innerHTML = 
-    //             `<span class="fiat-label">BCB Oficial</span>  Venta: ${f.BCB.venta.toFixed(2)} Compra:${f.BCB.compra.toFixed(2)} \n` +
-    //             `<span class="fiat-label">BCP USD</span>  Venta: ${f.BCP_USD.venta.toFixed(2)}  Compra: ${f.BCP_USD.compra.toFixed(2)}\n` +
-    //             `<span class="fiat-label">BCP USDT</span>  Venta: ${f.BCP_USDT.venta.toFixed(2)}  Compra: ${f.BCP_USDT.compra.toFixed(2)}\n` +
-    //             `<span class="fiat-label">BEC USD</span>  Venta: ${f.BEC_USD.venta.toFixed(2)}  Compra: ${f.BEC_USD.compra.toFixed(2)}\n` +
-    //             `<span class="fiat-label">BMSC USD</span>  Venta: ${f.BMSC_USD.venta.toFixed(2)}  Compra: ${f.BMSC_USD.compra.toFixed(2)}\n` +
-    //             `<span class="fiat-label">BISA USDT</span>  Venta: ${f.BISA.venta.toFixed(2)}  Compra: ${f.BISA.compra.toFixed(2)}`;
-    //     } catch (err) {
-    //         fiatContainer.innerHTML = `<span class="error">Error Tasas FIAT</span>`;
-    //     }
-    // }
-
         async function loadFiatData() {
             const fiatContainer = document.getElementById('fiatRates');
             try {
@@ -257,9 +238,13 @@
                 fiatContainer.innerHTML = 
                     `<div><span class="fiat-label">BCB Oficial</span> Venta: <strong>${f.BCB.venta.toFixed(2)}</strong> | Compra: <strong>${f.BCB.compra.toFixed(2)}</strong></div>` +
                     `<div><span class="fiat-label">BCP USD</span> Venta: <strong>${f.BCP_USD.venta.toFixed(2)}</strong> | Compra: <strong>${f.BCP_USD.compra.toFixed(2)}</strong></div>` +
-                    `<div><span class="fiat-label">BCP USDT</span> Venta: <strong>${f.BCP_USDT.venta.toFixed(2)}</strong> | Compra: <strong>${f.BCP_USDT.compra.toFixed(2)}</strong></div>` +
+                    `<div><span class="fiat-label">FIE USD</span> Venta: <strong>${f.FIE_USD.venta.toFixed(2)}</strong> | Compra: <strong>${f.FIE_USD.compra.toFixed(2)}</strong></div>` +
+                    `<div><span class="fiat-label">BSOL USD</span> Venta: <strong>${f.BSOL_USD.venta.toFixed(2)}</strong> | Compra: <strong>${f.BSOL_USD.compra.toFixed(2)}</strong></div>` +
+                    `<div><span class="fiat-label">BNB USD</span> Venta: <strong>${f.BNB_USD.venta.toFixed(2)}</strong> | Compra: <strong>${f.BNB_USD.compra.toFixed(2)}</strong></div>` +
+                    `<div><span class="fiat-label">BUN USD</span> Venta: <strong>${f.BUN_USD.venta.toFixed(2)}</strong> | Compra: <strong>${f.BUN_USD.compra.toFixed(2)}</strong></div>` +
                     `<div><span class="fiat-label">BEC USD</span> Venta: <strong>${f.BEC_USD.venta.toFixed(2)}</strong> | Compra: <strong>${f.BEC_USD.compra.toFixed(2)}</strong></div>` +
                     `<div><span class="fiat-label">BMSC USD</span> Venta: <strong>${f.BMSC_USD.venta.toFixed(2)}</strong> | Compra: <strong>${f.BMSC_USD.compra.toFixed(2)}</strong></div>` +
+                    `<div><span class="fiat-label">BCP USDT</span> Venta: <strong>${f.BCP_USDT.venta.toFixed(2)}</strong> | Compra: <strong>${f.BCP_USDT.compra.toFixed(2)}</strong></div>` +
                     `<div><span class="fiat-label">BISA USDT</span> Venta: <strong>${f.BISA.venta.toFixed(2)}</strong> | Compra: <strong>${f.BISA.compra.toFixed(2)}</strong></div>`;
             } catch (err) {
                 fiatContainer.innerHTML = `<span class="error">Error Tasas FIAT</span>`;
