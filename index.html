@@ -146,7 +146,7 @@
     const API_ORDERS_URL = "https://apicollector-production.up.railway.app/bybit/ordenes";
     const API_FIAT_URL = "https://apicollector-production.up.railway.app/fiat/ultimo";
     
-    let currentLimits = { buy: 5, sell: 5 };
+    let currentLimits = { buy: 10, sell: 10 };
     let cachedData = null;
     const fmtVol = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
     const fmtVolDec = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
